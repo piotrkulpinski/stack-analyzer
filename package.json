@@ -9,15 +9,15 @@
   },
   "dependencies": {
     "@hono/zod-validator": "^0.5.0",
-    "@specfy/stack-analyser": "^1.12.0",
+    "@specfy/stack-analyser": "^1.27.2",
     "fs-extra": "^11.3.0",
-    "hono": "^4.7.8",
-    "zod": "^3.24.3"
+    "hono": "^4.8.5",
+    "zod": "^4.0.8"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.1.2",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^22.15.3",
+    "@types/node": "^22.16.5",
     "typescript": "^5.8.3"
   },
   "packageManager": "bun@1.2.2"
