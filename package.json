@@ -10,6 +10,7 @@
   "dependencies": {
     "@hono/zod-validator": "^0.5.0",
     "@specfy/stack-analyser": "^1.27.2",
+    "execa": "^9.6.0",
     "fs-extra": "^11.3.0",
     "hono": "^4.8.5",
     "zod": "^4.0.8"

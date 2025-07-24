@@ -1,74 +1,50 @@
-import { execFileSync } from "node:child_process"
+import "@specfy/stack-analyser/dist/autoload.js"
+import fs from "node:fs/promises"
+import os from "node:os"
 import path from "node:path"
-import type { AnalyserJson } from "@specfy/stack-analyser"
-import fs from "fs-extra"
+import { type AllowedKeys, analyser, FSProvider, flatten } from "@specfy/stack-analyser"
+import { $ } from "execa"
 import { getRepositoryString } from "./helpers"
 
 const getRepoInfo = (url: string) => {
   const repo = getRepositoryString(url)
+  const dir = path.join(os.tmpdir(), "stack-analyzer", repo)
 
-  const repoDir = path.join(process.cwd(), ".repositories", repo)
-  const outputFile = path.join(`output-${repo.replace("/", "-")}.json`)
-
-  return { repo, repoDir, outputFile }
+  return { repo, dir }
 }
 
-const cloneRepository = async (repo: string, repoDir: string) => {
-  console.time("Cloning repository")
+const cloneRepository = async (repo: string, dir: string, branch = "main") => {
+  const res = await $`git clone --branch ${branch} https://github.com/${repo}.git --depth 2 ${dir}`
 
-  try {
-    fs.ensureDirSync(repoDir)
-    // execFileSync("bun", ["x", "tiged", `${repo}`, repoDir, "-f"])
-    execFileSync("bun", ["x", "degit", `${repo}`, repoDir, "-f"])
-  } catch (error) {
-    console.error(`Error cloning ${repo}:`, error)
-    throw new Error(`Error cloning ${repo}`)
-  } finally {
-    console.timeEnd("Cloning repository")
-  }
-}
-
-const analyzeStack = async (repo: string, repoDir: string, outputFile: string) => {
-  console.time("Analyzing stack")
-
-  try {
-    execFileSync("bun", ["x", "@specfy/stack-analyser", repoDir, "--flat", "-o", outputFile])
-    const output = fs.readFileSync(outputFile, "utf-8")
-    return JSON.parse(output) as AnalyserJson
-  } catch (error) {
-    console.error(`Error analyzing stack for ${repo}:`, error)
-    throw error
-  } finally {
-    console.timeEnd("Analyzing stack")
-  }
-}
-
-const cleanupDirectories = async (repo: string, repoDir: string, outputFile: string) => {
-  console.time("Cleaning up directories")
-
-  try {
-    await fs.remove(repoDir)
-    await fs.remove(outputFile)
-  } catch (error) {
-    console.error(`Cleanup error for ${repo}:`, error)
-    throw error
-  } finally {
-    console.timeEnd("Cleaning up directories")
+  if (res.exitCode !== 0) {
+    console.error(res.stderr)
+    throw new Error(`Error cloning ${repo}`, { cause: res.stderr })
   }
 }
 
 export const analyzeRepositoryStack = async (url: string) => {
-  const { repo, repoDir, outputFile } = getRepoInfo(url)
+  const { repo, dir } = getRepoInfo(url)
 
   try {
-    // Clone repository
-    await cloneRepository(repo, repoDir)
+    await fs.rm(dir, { recursive: true, force: true })
+  } catch {}
 
-    // Get analysis
-    const { childs } = await analyzeStack(repo, repoDir, outputFile)
+  try {
+    console.info(`Cloning repository ${repo}`)
 
-    return [...new Set(childs.flatMap(({ techs }) => techs))]
+    await cloneRepository(repo, dir)
+
+    console.log(`Analyzing stack for ${repo}`)
+
+    const provider = new FSProvider({ path: dir })
+    const payload = await analyser({ provider })
+    const { techs, childs } = flatten(payload, { merge: true }).toJson()
+
+    return [...new Set<AllowedKeys>([...techs, ...childs.flatMap(({ techs }) => techs)])]
+  } catch (error) {
+    console.error(`Error analyzing stack for ${repo}:`, error)
+    throw error
   } finally {
-    await cleanupDirectories(repo, repoDir, outputFile).catch(() => {})
+    await fs.rm(dir, { recursive: true, force: true })
   }
 }
