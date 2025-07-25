@@ -56,7 +56,6 @@ api.post("/analyze", async c => {
       FROM "Tool" 
       WHERE status IN ('Scheduled', 'Published') 
         AND "repositoryUrl" IS NOT NULL
-      LIMIT 10
     `
 
     console.log(tools)
