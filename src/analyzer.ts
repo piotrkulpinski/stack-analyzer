@@ -13,8 +13,8 @@ const getRepoInfo = (url: string) => {
   return { repo, dir }
 }
 
-const cloneRepository = async (repo: string, dir: string, branch = "main") => {
-  const res = await $`git clone --branch ${branch} https://github.com/${repo}.git --depth 2 ${dir}`
+const cloneRepository = async (repo: string, dir: string) => {
+  const res = await $`git clone https://github.com/${repo}.git --depth 2 ${dir}`
 
   if (res.exitCode !== 0) {
     console.error(res.stderr)
