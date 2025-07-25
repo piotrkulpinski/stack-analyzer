@@ -19,6 +19,7 @@
     "@biomejs/biome": "^2.1.2",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.16.5",
+    "performance": "^1.4.0",
     "typescript": "^5.8.3"
   },
   "packageManager": "bun@1.2.2"
