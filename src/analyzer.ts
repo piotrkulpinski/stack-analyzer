@@ -1,9 +1,8 @@
-import "@specfy/stack-analyser/dist/autoload.js"
 import fs from "node:fs/promises"
+import "@specfy/stack-analyser/dist/autoload.js"
 import os from "node:os"
 import path from "node:path"
-import { type AllowedKeys, analyser, FSProvider, flatten } from "@specfy/stack-analyser"
-import { $ } from "execa"
+import { type AllowedKeys, analyser, flatten, FSProvider } from "@specfy/stack-analyser"
 import { getRepositoryString } from "./helpers"
 
 const getRepoInfo = (url: string) => {
@@ -14,11 +13,13 @@ const getRepoInfo = (url: string) => {
 }
 
 const cloneRepository = async (repo: string, dir: string) => {
-  const res = await $`git clone https://github.com/${repo}.git --depth 2 ${dir}`
+  const res = await Bun.$`git clone https://github.com/${repo}.git --depth 2 ${dir}`
+    .nothrow()
+    .quiet()
 
   if (res.exitCode !== 0) {
-    console.error(res.stderr)
-    throw new Error(`Error cloning ${repo}`, { cause: res.stderr })
+    console.error(res.stderr.toString())
+    throw new Error(`Error cloning ${repo}`, { cause: res.stderr.toString() })
   }
 }
 
