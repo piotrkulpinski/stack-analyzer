@@ -13,13 +13,16 @@ const getRepoInfo = (url: string) => {
 }
 
 const cloneRepository = async (repo: string, dir: string) => {
-  const res = await Bun.$`git clone https://github.com/${repo}.git --depth 2 ${dir}`
-    .nothrow()
-    .quiet()
+  const proc = Bun.spawn(["git", "clone", `https://github.com/${repo}.git`, "--depth", "2", dir], {
+    stderr: "pipe",
+  })
 
-  if (res.exitCode !== 0) {
-    console.error(res.stderr.toString())
-    throw new Error(`Error cloning ${repo}`, { cause: res.stderr.toString() })
+  const exitCode = await proc.exited
+
+  if (exitCode !== 0) {
+    const stderr = await new Response(proc.stderr).text()
+    console.error(stderr)
+    throw new Error(`Error cloning ${repo}`, { cause: stderr })
   }
 }
 
