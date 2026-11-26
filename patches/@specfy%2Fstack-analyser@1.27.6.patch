@@ -1,0 +1,13 @@
+diff --git a/dist/rules/spec/docker/component.js b/dist/rules/spec/docker/component.js
+index c9639bfe6e88221c86c604fbb43169a6c1b7acad..3e1af49a25f44ba9be59629352b3197c236440db 100644
+--- a/dist/rules/spec/docker/component.js
++++ b/dist/rules/spec/docker/component.js
+@@ -26,7 +26,7 @@ export const detectDockerComponent = async (files, provider) => {
+         }
+         const pl = new Payload({ name: 'virtual', folderPath: file.fp });
+         for (const [name, service] of Object.entries(parsed.services)) {
+-            if (!service.image) {
++            if (!service || typeof service.image !== "string") {
+                 continue;
+             }
+             // If we don't match, it's fine because docker is mostly made for services
